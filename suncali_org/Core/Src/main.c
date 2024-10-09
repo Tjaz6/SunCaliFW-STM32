@@ -105,7 +105,7 @@ int main(void)
 	  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 	  HAL_Delay(1000);
 	  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-	  HAL_Delay(1000);
+	  HAL_Delay(500);
 
 	   char msg[] = "Hello, UARTXXX!\r\n";  // Message to send
 
