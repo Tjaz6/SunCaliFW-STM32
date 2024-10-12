@@ -61,6 +61,18 @@ void Error_Handler(void);
 #define LED1_GPIO_Port GPIOC
 #define TAMP_OUT1_Pin GPIO_PIN_1
 #define TAMP_OUT1_GPIO_Port GPIOA
+#define TAMP_OUT2_Pin GPIO_PIN_2
+#define TAMP_OUT2_GPIO_Port GPIOA
+#define TAMP_OUT3_Pin GPIO_PIN_3
+#define TAMP_OUT3_GPIO_Port GPIOA
+#define TAMP_OUT4_Pin GPIO_PIN_4
+#define TAMP_OUT4_GPIO_Port GPIOA
+#define TAMP_OUT5_Pin GPIO_PIN_5
+#define TAMP_OUT5_GPIO_Port GPIOA
+#define COL0_Pin GPIO_PIN_9
+#define COL0_GPIO_Port GPIOA
+#define COL1_Pin GPIO_PIN_10
+#define COL1_GPIO_Port GPIOA
 #define LED2_Pin GPIO_PIN_15
 #define LED2_GPIO_Port GPIOA
 
