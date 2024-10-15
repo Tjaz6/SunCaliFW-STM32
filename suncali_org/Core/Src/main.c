@@ -18,11 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "string.h"
 #include "stdio.h"
+#include "usbd_cdc_if.h"
 
 /* USER CODE END Includes */
 
@@ -60,11 +62,16 @@ char adc_out[50];
 uint32_t adc_buffer[3];
 uint32_t adc_buffer2[2];
 
-int flag = 0;
-int flag2 = 0;
+volatile int flag = 0;
+volatile int flag2 = 0;
 int state = 0;
 
-char uart_buffer[100];
+char uart_buffer[60];
+
+volatile uint8_t run_main_loop = 0; // 0 = stop, 1 = start
+
+
+
 
 
 /* USER CODE END PV */
@@ -120,6 +127,7 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_ADC2_Init();
+  MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
@@ -140,12 +148,55 @@ int main(void)
 
   //HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
 
+
+  uint8_t data[] = "Hello from STM32 via USB!\r\n";
+	 // Send data over USB
+  CDC_Transmit_FS(data, sizeof(data) - 1);
+
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if (run_main_loop)
+	          {
+
+	              if(state == 0){
+	              		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
+	              		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+	              		  HAL_Delay(10);
+	              		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
+	              		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+	              		  state = 1;
+	              }
+
+	              if(flag == 1 && flag2 == 1){
+
+	            	  	  snprintf(uart_buffer, sizeof(uart_buffer), "%lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
+	            	  	  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
+	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer)-1);
+	            	  	  flag = 0;
+	            	  	  flag2 = 0;
+	            	  	  // HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+	            	  	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+	            	  	  state = 0;
+	              }
+
+	              HAL_Delay(100);
+
+	          }
+	          else
+	          {
+	              // Optionally, do something when the loop is stopped
+	              // Example: keep the system idle
+	              HAL_Delay(100); // Small idle delay
+	          }
+
+/*
 
 	  if(state == 0){
 		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
@@ -182,15 +233,14 @@ int main(void)
 
 				 snprintf(uart_buffer, sizeof(uart_buffer), "%lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
 				 HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
-
-
+				 CDC_Transmit_FS((uint8_t *)uart_buffer, sizeof(uart_buffer)-1);
 		 flag = 0;
 		 flag2 = 0;
 		// HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
 		 HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
 	  }
 
-	 HAL_Delay(10);
+	 HAL_Delay(100);
 
 
 	// if(flag2 == 1){
@@ -202,19 +252,12 @@ int main(void)
 	//  }
 
 
-
-
-
-
-
-
 	 // sprintf(adc_out, "ADC1: %lu\r\n", adc_value);
 	 // HAL_UART_Transmit(&huart1, (uint8_t *)adc_out, strlen(adc_out), HAL_MAX_DELAY);
-
+*/
 
 	 // HAL_Delay(500);
 	  }
-
 
 
     /* USER CODE END WHILE */
@@ -290,7 +333,7 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.GainCompensation = 0;
@@ -375,7 +418,7 @@ static void MX_ADC2_Init(void)
   /** Common config
   */
   hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc2.Init.GainCompensation = 0;
