@@ -32,10 +32,11 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 // Define the commands
-//const char START_CMD[] = "s";
-//const char STOP_CMD[]  = "p";
-extern volatile uint8_t run_main_loop;
 
+extern volatile uint8_t run_main_loop;
+uint8_t nastavitve[7];
+
+extern uint32_t usb_test;
 
 /* USER CODE END PV */
 
@@ -225,10 +226,25 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
     case CDC_SET_LINE_CODING:
+    	nastavitve[0] = pbuf[0];
+    	nastavitve[1] = pbuf[1];
+    	nastavitve[2] = pbuf[2];
+    	nastavitve[3] = pbuf[3];
+    	nastavitve[4] = pbuf[4];
+    	nastavitve[5] = pbuf[5];
+    	nastavitve[6] = pbuf[6];
 
     break;
 
     case CDC_GET_LINE_CODING:
+
+    	pbuf[0] = nastavitve[0];
+    	pbuf[1] = nastavitve[1];
+    	pbuf[2] = nastavitve[2];
+    	pbuf[3] = nastavitve[3];
+    	pbuf[4] = nastavitve[4];
+    	pbuf[5] = nastavitve[5];
+    	pbuf[6] = nastavitve[6];
 
     break;
 
@@ -265,39 +281,37 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
-    /* USER CODE BEGIN 6 */
-    // Store the original length of the received data for echoing
-    uint32_t original_len = *Len;
+  /* USER CODE BEGIN 6 */
 
-    // Null-terminate the received data, but ensure the length does not exceed the buffer
-    if (*Len < sizeof(Buf)) {
-        Buf[*Len] = '\0';  // Null-terminate at the end of the received data
-    } else {
-        Buf[sizeof(Buf) - 1] = '\0';  // Ensure we don't overflow
+
+
+
+
+    if(*Len >= 7){
+    	// Check for "start" command
+    	if (strncmp((char*)Buf, "start", *Len-2) == 0)  // Only compare the first 5 characters
+    		{
+    	       	   run_main_loop = 1;  // Set flag to start the loop
+    	       	   CDC_Transmit_FS((uint8_t*)"Main loop started\r\n", 19);  // Optional response
+    	    }else{
+    	    	CDC_Transmit_FS(Buf, *Len);
+    	    }
+    } else if(*Len >= 6){
+    	// Check for "stop" command
+    	if (strncmp((char*)Buf, "stop", *Len-2) == 0)  // Only compare the first 4 characters
+    	    {
+    	        run_main_loop = 0;  // Set flag to stop the loop
+    	        CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);  // Optional response
+    	    } else{
+    	    	CDC_Transmit_FS(Buf, *Len);
+    	    }
+    } else{
+            // Echo the received message back to the host using the original length
+            CDC_Transmit_FS(Buf, *Len);  // Transmit the received data back
     }
 
-    // Trim any trailing newline characters (if present) for command comparison
-    while (*Len > 0 && (Buf[*Len - 1] == '\r' || Buf[*Len - 1] == '\n')) {
-        (*Len)--;  // Reduce length to exclude the newline
-    }
 
-    // Check for "start" command
-    if (strncmp((char*)Buf, "1", 1) == 0)  // Only compare the first 5 characters
-    {
-        run_main_loop = 1;  // Set flag to start the loop
-        CDC_Transmit_FS((uint8_t*)"Main loop started\r\n", 19);  // Optional response
-    }
-    // Check for "stop" command
-    else if (strncmp((char*)Buf, "2", 1) == 0)  // Only compare the first 4 characters
-    {
-        run_main_loop = 0;  // Set flag to stop the loop
-        CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);  // Optional response
-    }
-    else
-    {
-        // Echo the received message back to the host using the original length
-        CDC_Transmit_FS(Buf, original_len);  // Transmit the received data back
-    }
+
 
     // Reset the buffer pointer to prepare for the next packet
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
@@ -306,9 +320,8 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
     USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
     return (USBD_OK);
-    /* USER CODE END 6 */
+  /* USER CODE END 6 */
 }
-
 
 /**
   * @brief  CDC_Transmit_FS

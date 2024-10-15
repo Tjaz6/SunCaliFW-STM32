@@ -68,6 +68,7 @@ int state = 0;
 
 char uart_buffer[60];
 
+
 volatile uint8_t run_main_loop = 0; // 0 = stop, 1 = start
 
 
@@ -149,11 +150,6 @@ int main(void)
   //HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
 
 
-  uint8_t data[] = "Hello from STM32 via USB!\r\n";
-	 // Send data over USB
-  CDC_Transmit_FS(data, sizeof(data) - 1);
-
-
 
 
   /* USER CODE END 2 */
@@ -178,7 +174,7 @@ int main(void)
 
 	            	  	  snprintf(uart_buffer, sizeof(uart_buffer), "%lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
 	            	  	  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
-	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer)-1);
+	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
 	            	  	  flag = 0;
 	            	  	  flag2 = 0;
 	            	  	  // HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
@@ -186,14 +182,16 @@ int main(void)
 	            	  	  state = 0;
 	              }
 
-	              HAL_Delay(100);
+	              HAL_Delay(10);
 
 	          }
 	          else
 	          {
 	              // Optionally, do something when the loop is stopped
 	              // Example: keep the system idle
-	              HAL_Delay(100); // Small idle delay
+	        	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+	        	  HAL_Delay(100); // Small idle delay
+
 	          }
 
 /*
@@ -601,10 +599,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, COL0_Pin|COL1_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, COL0_Pin|COL1_Pin|LED2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED1_Pin */
   GPIO_InitStruct.Pin = LED1_Pin;
