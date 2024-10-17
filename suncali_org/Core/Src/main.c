@@ -141,6 +141,7 @@ int main(void)
 
 
   HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
   HAL_Delay(50);
 
 
@@ -170,19 +171,46 @@ int main(void)
 	              		  state = 1;
 	              }
 
-	              if(flag == 1 && flag2 == 1){
+	              if(state == 3){
+	              		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
+	              		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+	              		  HAL_Delay(10);
+	              		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
+	              		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+	              		  state = 4;
+	              }
 
-	            	  	  snprintf(uart_buffer, sizeof(uart_buffer), "%lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
+
+
+
+	              if(flag == 1 && flag2 == 1 && state == 1){
+
+	            	  	  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
 	            	  	  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
 	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
 	            	  	  flag = 0;
 	            	  	  flag2 = 0;
-	            	  	  // HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+	            	  	  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
 	            	  	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+	            	  	  HAL_Delay(10);
+	            	  	  state = 3;
+	              }
+
+	              if(flag == 1 && flag2 == 1 && state == 4){
+
+	            	  	  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
+	            	  	  HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
+	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+	            	  	  flag = 0;
+	            	  	  flag2 = 0;
+	            	  	  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+	            	  	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+	            	  	  HAL_Delay(10);
 	            	  	  state = 0;
 	              }
 
-	              HAL_Delay(10);
+
+	              HAL_Delay(50);
 
 	          }
 	          else
