@@ -145,13 +145,6 @@ int main(void)
   HAL_Delay(50);
 
 
- // HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
- // HAL_Delay(100);
-
-  //HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
-
-
-
 
   /* USER CODE END 2 */
 
@@ -221,68 +214,6 @@ int main(void)
 	        	  HAL_Delay(100); // Small idle delay
 
 	          }
-
-/*
-
-	  if(state == 0){
-		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
-		  HAL_Delay(10);
-		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
-		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
-	  }
-
-	//  if(state ==1 ){
-	//	  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
-	//	  HAL_Delay(10);
-	//	  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer, 3);
-	//  }
-
-
-
-
-
-	  //HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-	 // HAL_Delay(100);
-	//HAL_GPIO_TogglePin(COL0_GPIO_Port, COL0_Pin);
-
-	//HAL_Delay(10);
-
-	 if(flag == 1 && flag2 == 1){
-		// snprintf(uart_buffer, sizeof(uart_buffer),
-		//                  "ADC1 Values: %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2]);
-		// HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
-
-		// snprintf(uart_buffer, sizeof(uart_buffer),
-		//		                  "ADC2 Values: %lu, %lu \r\n", adc_buffer2[0], adc_buffer2[1]);
-			//	 HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
-
-				 snprintf(uart_buffer, sizeof(uart_buffer), "%lu, %lu, %lu, %lu, %lu\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2],adc_buffer2[0], adc_buffer2[1]);
-				 HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
-				 CDC_Transmit_FS((uint8_t *)uart_buffer, sizeof(uart_buffer)-1);
-		 flag = 0;
-		 flag2 = 0;
-		// HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
-		 HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-	  }
-
-	 HAL_Delay(100);
-
-
-	// if(flag2 == 1){
-	//	 snprintf(uart_buffer, sizeof(uart_buffer),
-	//	                  "ADC2 Values: %lu, %lu, %lu\r\n", adc_buffer2[0], adc_buffer2[1], adc_buffer2[2]);
-	//	 HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer, strlen(uart_buffer), HAL_MAX_DELAY);
-//
-	//	 flag2 = 0;
-	//  }
-
-
-	 // sprintf(adc_out, "ADC1: %lu\r\n", adc_value);
-	 // HAL_UART_Transmit(&huart1, (uint8_t *)adc_out, strlen(adc_out), HAL_MAX_DELAY);
-*/
-
-	 // HAL_Delay(500);
 	  }
 
 
