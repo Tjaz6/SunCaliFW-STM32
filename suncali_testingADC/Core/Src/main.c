@@ -62,9 +62,10 @@ char adc_out[50];
 uint32_t adc_buffer[15];
 uint32_t adc_buffer2[2];
 
-volatile int flag = 0;
-volatile int flag2 = 0;
-int state = 0;
+volatile uint8_t flag = 0;
+volatile uint8_t flag2 = 0;
+uint8_t state = 0;
+
 
 char uart_buffer[60];
 
@@ -135,13 +136,10 @@ int main(void)
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
 
+  // Calibrate ADC
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
   HAL_TIM_Base_Start_IT(&htim1);
-
-
-  char msg[] = "Hello, UART!\r\n";
-  HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 
   HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
@@ -154,82 +152,93 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  if (run_main_loop)
-	          {
+  while (1) {
 
-	              if(state == 0){
-	              		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
-	              		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
-	              		  HAL_Delay(10);
-	              		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
-	              		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
-	              		  state = 1;
-	              }
-
-	              if(state == 3){
-	              		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
-	              		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
-	              		  HAL_Delay(10);
-	              		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
-	              		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
-	              		  state = 4;
-	              }
-
-
-
-
-	              if(flag == 1 && flag2 == 1 && state == 1){
-
-	            	  	  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-	            	  	  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-	            	  	  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-	            	  	  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %lu, %lu, %lu, %lu, %lu\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
-
-
-	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
-	            	  	  flag = 0;
-	            	  	  flag2 = 0;
-	            	  	  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
-	            	  	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-	            	  	  HAL_Delay(10);
-	            	  	  state = 3;
-	              }
-
-	              if(flag == 1 && flag2 == 1 && state == 4){
-
-						  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-						  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-						  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-
-						  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %lu, %lu, %lu, %lu, %lu\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
-
-
-	            	  	  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
-	            	  	  flag = 0;
-	            	  	  flag2 = 0;
-	            	  	  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
-	            	  	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-	            	  	  HAL_Delay(10);
-	            	  	  state = 0;
-	              }
-
-
-	              HAL_Delay(50);
-
-	          }
-	          else
-	          {
-	              // Optionally, do something when the loop is stopped
-	              // Example: keep the system idle
-	        	  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-	        	  HAL_Delay(100); // Small idle delay
-
-	          }
+	  if (run_main_loop == 1 && state == 0){
+		  state = 1;
 	  }
+
+
+	  if(state == 1){
+		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+		  HAL_Delay(10);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
+		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+		  state = 2;
+	  }
+
+	  if(state == 3){
+		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+		  HAL_Delay(10);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
+		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+		  state = 4;
+	  }
+
+
+	  if(flag == 1 && flag2 == 1 && state == 2){
+
+		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
+		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
+		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
+
+		  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %lu, %lu, %lu, %lu, %lu\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+
+		  flag = 0;
+		  flag2 = 0;
+		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+		  HAL_Delay(10);
+		  state = 3;
+	  }
+
+
+	  if(flag == 1 && flag2 == 1 && state == 4){
+
+		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
+		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
+		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
+
+		  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %lu, %lu, %lu, %lu, %lu\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+
+		  while (CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer)) == USBD_BUSY) {
+		          // Optional: Add a small delay to avoid tight looping
+		          HAL_Delay(1);
+		      }
+
+
+
+		  flag = 0;
+		  flag2 = 0;
+		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+		  HAL_Delay(10);
+		  state = 5;
+
+	  }
+
+	  if(run_main_loop == 0 && state == 5){
+		  CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);
+		  state = 0;
+	  }
+
+	  if(state == 5){
+		  state = 0;
+	  }
+
+
+
+
+
+
+	  HAL_Delay(10); // problem za main loop stopped?
+
+
+
+  }
 
 
     /* USER CODE END WHILE */

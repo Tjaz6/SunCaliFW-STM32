@@ -287,27 +287,27 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 
 
 
-    if(*Len >= 7){
+    if(*Len == 7){
     	// Check for "start" command
     	if (strncmp((char*)Buf, "start", *Len-2) == 0)  // Only compare the first 5 characters
     		{
     	       	   run_main_loop = 1;  // Set flag to start the loop
     	       	   CDC_Transmit_FS((uint8_t*)"Main loop started\r\n", 19);  // Optional response
     	    }else{
-    	    	CDC_Transmit_FS(Buf, *Len);
+    	    	CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
     	    }
-    } else if(*Len >= 6){
+    } else if(*Len == 6){
     	// Check for "stop" command
     	if (strncmp((char*)Buf, "stop", *Len-2) == 0)  // Only compare the first 4 characters
     	    {
     	        run_main_loop = 0;  // Set flag to stop the loop
-    	        CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);  // Optional response
+    	        //CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);  // Optional response
     	    } else{
-    	    	CDC_Transmit_FS(Buf, *Len);
+    	    	CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
     	    }
     } else{
             // Echo the received message back to the host using the original length
-            CDC_Transmit_FS(Buf, *Len);  // Transmit the received data back
+    		CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);  // Transmit the received data back
     }
 
 
