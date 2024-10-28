@@ -34,9 +34,10 @@
 // Define the commands
 
 extern volatile uint8_t run_main_loop;
+extern volatile uint8_t run_offset;
+
 uint8_t nastavitve[7];
 
-extern uint32_t usb_test;
 
 /* USER CODE END PV */
 
@@ -285,30 +286,38 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 
 
 
+	switch(*Len){
 
+		case 6:
+			if (strncmp((char*)Buf, "stop", 4) == 0){
+				run_main_loop = 0;  // Set flag to stop the loop
+				run_offset = 0;  // Set the offset flag to stop
+				break;
+			}
+			CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
+			break;
 
-    if(*Len == 7){
-    	// Check for "start" command
-    	if (strncmp((char*)Buf, "start", *Len-2) == 0)  // Only compare the first 5 characters
-    		{
-    	       	   run_main_loop = 1;  // Set flag to start the loop
-    	       	   CDC_Transmit_FS((uint8_t*)"Main loop started\r\n", 19);  // Optional response
-    	    }else{
-    	    	CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
-    	    }
-    } else if(*Len == 6){
-    	// Check for "stop" command
-    	if (strncmp((char*)Buf, "stop", *Len-2) == 0)  // Only compare the first 4 characters
-    	    {
-    	        run_main_loop = 0;  // Set flag to stop the loop
-    	        //CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);  // Optional response
-    	    } else{
-    	    	CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
-    	    }
-    } else{
-            // Echo the received message back to the host using the original length
-    		CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);  // Transmit the received data back
-    }
+		case 7:
+			if (strncmp((char*)Buf, "start", 5) == 0){
+			   run_main_loop = 1;  // Set flag to start the loop
+			   CDC_Transmit_FS((uint8_t*)"Main loop started\r\n", 19);  // Optional response
+			   break;
+			}
+			CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
+			break;
+
+		case 8:
+			if (strncmp((char*)Buf, "offset", 6) == 0){
+				run_offset = 1;  // Set the offset flag to start
+				CDC_Transmit_FS((uint8_t*)"Running offset measurement\r\n", 28);  // Optional response
+				break;
+			}
+			CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
+			break;
+
+		default:
+			CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
+	}
 
 
 

@@ -55,26 +55,24 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-uint32_t adc_value = 0;
 
-char adc_out[50];
-
-uint32_t adc_buffer[15];
-uint32_t adc_buffer2[2];
+uint16_t adc_buffer[15];
+uint16_t adc_buffer2[10];
 
 volatile uint8_t flag = 0;
 volatile uint8_t flag2 = 0;
 uint8_t state = 0;
 
-
 char uart_buffer[60];
 
-
-uint32_t C0r1AVG = 0;
-uint32_t C0r2AVG = 0;
-uint32_t C0r3AVG = 0;
+uint16_t C0r1AVG = 0;
+uint16_t C0r2AVG = 0;
+uint16_t C0r3AVG = 0;
+uint16_t C0r4AVG = 0;
+uint16_t C0r5AVG = 0;
 
 volatile uint8_t run_main_loop = 0; // 0 = stop, 1 = start
+volatile uint8_t run_offset = 0;
 
 
 
@@ -139,6 +137,7 @@ int main(void)
   // Calibrate ADC
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+
   HAL_TIM_Base_Start_IT(&htim1);
 
 
@@ -158,68 +157,6 @@ int main(void)
 		  state = 1;
 	  }
 
-
-	  if(state == 1){
-		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
-		  HAL_Delay(10);
-		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
-		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
-		  state = 2;
-	  }
-
-	  if(state == 3){
-		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
-		  HAL_Delay(10);
-		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
-		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
-		  state = 4;
-	  }
-
-
-	  if(flag == 1 && flag2 == 1 && state == 2){
-
-		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-		  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %lu, %lu, %lu, %lu, %lu\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
-		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
-
-		  flag = 0;
-		  flag2 = 0;
-		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-		  HAL_Delay(10);
-		  state = 3;
-	  }
-
-
-	  if(flag == 1 && flag2 == 1 && state == 4){
-
-		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-		  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %lu, %lu, %lu, %lu, %lu\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
-
-		  while (CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer)) == USBD_BUSY) {
-		          // Optional: Add a small delay to avoid tight looping
-		          HAL_Delay(1);
-		      }
-
-
-
-		  flag = 0;
-		  flag2 = 0;
-		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-		  HAL_Delay(10);
-		  state = 5;
-
-	  }
-
 	  if(run_main_loop == 0 && state == 5){
 		  CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);
 		  state = 0;
@@ -229,15 +166,78 @@ int main(void)
 		  state = 0;
 	  }
 
+	  if(state == 1){
+		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+		  HAL_Delay(2);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
+		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+		  state = 2;
+	  }
 
+	  if(state == 3){
+		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+		  HAL_Delay(2);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
+		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+		  state = 4;
+	  }
 
+	  if(flag == 1 && flag2 == 1 && state == 2){
 
+		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
+		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
+		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
 
+		  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
 
-	  HAL_Delay(10); // problem za main loop stopped?
+		  flag = 0;
+		  flag2 = 0;
+		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+		  HAL_Delay(2);
+		  state = 3;
+	  }
 
+	  if(flag == 1 && flag2 == 1 && state == 4){
 
+		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
+		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
+		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
 
+		  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+
+		  flag = 0;
+		  flag2 = 0;
+		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+		  HAL_Delay(2);
+		  state = 5;
+	  }
+
+	  if(run_offset == 1 && state == 0){
+		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+		  HAL_Delay(2);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
+		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+		  state = 6;
+	  }
+
+	  if(flag == 1 && flag2 == 1 && state == 6){
+
+		  snprintf(uart_buffer, sizeof(uart_buffer), "Offsets: %u, %u, %u, %u, %u\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2], adc_buffer2[0], adc_buffer2[1]);
+		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+
+		  flag = 0;
+		  flag2 = 0;
+		  state = 0;
+	  }
+
+	  HAL_Delay(10);
   }
 
 
@@ -268,9 +268,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
-  RCC_OscInitStruct.PLL.PLLN = 12;
+  RCC_OscInitStruct.PLL.PLLN = 18;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV6;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -286,7 +286,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -314,7 +314,7 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV6;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.GainCompensation = 0;
@@ -399,7 +399,7 @@ static void MX_ADC2_Init(void)
   /** Common config
   */
   hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV6;
   hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc2.Init.GainCompensation = 0;
@@ -465,7 +465,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 9600-1;
+  htim1.Init.Prescaler = 14400-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -606,32 +606,21 @@ static void MX_GPIO_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
-    if (htim->Instance == TIM1)
-    {
+    if (htim->Instance == TIM1){
     	HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-    	//HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-
-
     }
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-    if (hadc->Instance == ADC1)
-    {
+    if (hadc->Instance == ADC1){
     	flag = 1;
     }
 
-    if (hadc->Instance == ADC2)
-        {
-        	flag2 = 1;
-        }
+    if (hadc->Instance == ADC2){
+		flag2 = 1;
+	}
 }
-
-
-
-
-
 
 
 /* USER CODE END 4 */
