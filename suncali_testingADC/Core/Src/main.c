@@ -153,91 +153,107 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1) {
 
-	  if (run_main_loop == 1 && state == 0){
-		  state = 1;
-	  }
+	  switch (state){
+	  case 0:
+		  if (run_main_loop == 1){
+			  state = 1;
+		  }
 
-	  if(run_main_loop == 0 && state == 5){
-		  CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);
-		  state = 0;
-	  }
+		  if(run_offset == 1 ){
+			  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+			  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+			  HAL_Delay(2);
+			  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
+			  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
+			  state = 6;
+		  }
 
-	  if(state == 5){
-		  state = 0;
-	  }
+		  break;
 
-	  if(state == 1){
+	  case 1:
 		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 1);
 		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
 		  HAL_Delay(2);
 		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
 		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
 		  state = 2;
-	  }
+		  break;
 
-	  if(state == 3){
+	  case 2:
+		  if(flag == 1 && flag2 == 1){
+			  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
+			  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
+			  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
+
+			  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+			  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+
+			  flag = 0;
+			  flag2 = 0;
+			  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
+			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+			  HAL_Delay(2);
+			  state = 3;
+		  }
+
+		  break;
+
+	  case 3:
 		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
 		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
 		  HAL_Delay(2);
 		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
 		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
 		  state = 4;
-	  }
+		  break;
 
-	  if(flag == 1 && flag2 == 1 && state == 2){
+	  case 4:
+		  if(flag == 1 && flag2 == 1){
+			  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
+			  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
+			  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
 
-		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
+			  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+			  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
 
-		  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
-		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+			  flag = 0;
+			  flag2 = 0;
+			  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
+			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+			  HAL_Delay(2);
+			  state = 5;
+		  }
 
-		  flag = 0;
-		  flag2 = 0;
-		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-		  HAL_Delay(2);
-		  state = 3;
-	  }
+		  break;
 
-	  if(flag == 1 && flag2 == 1 && state == 4){
-
-		  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-		  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-		  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-		  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
-		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
-
-		  flag = 0;
-		  flag2 = 0;
-		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
-		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
-		  HAL_Delay(2);
-		  state = 5;
-	  }
-
-	  if(run_offset == 1 && state == 0){
-		  HAL_GPIO_WritePin(COL0_GPIO_Port, COL0_Pin, 0);
-		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 0);
-		  HAL_Delay(2);
-		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
-		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
-		  state = 6;
-	  }
-
-	  if(flag == 1 && flag2 == 1 && state == 6){
-
-		  snprintf(uart_buffer, sizeof(uart_buffer), "Offsets: %u, %u, %u, %u, %u\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2], adc_buffer2[0], adc_buffer2[1]);
-		  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
-
-		  flag = 0;
-		  flag2 = 0;
+	  case 5:
+		  if(run_main_loop == 0){
+			  CDC_Transmit_FS((uint8_t*)"Main loop stopped\r\n", 19);
+		  }
 		  state = 0;
+		  break;
+
+	  case 6:
+		  if(flag == 1 && flag2 == 1){
+
+			  snprintf(uart_buffer, sizeof(uart_buffer), "Offsets: %u, %u, %u, %u, %u\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2], adc_buffer2[0], adc_buffer2[1]);
+			  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+
+			  flag = 0;
+			  flag2 = 0;
+			  state = 0;
+		  }
+
+		  break;
+
+	  default:
+		  state = 0;
+
 	  }
 
-	  HAL_Delay(10);
+	  HAL_Delay(2);
+
+
   }
 
 
