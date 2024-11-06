@@ -56,20 +56,14 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 
 
-uint16_t adc_buffer[15];
-uint16_t adc_buffer2[10];
+uint16_t adc_buffer[3];
+uint16_t adc_buffer2[2];
 
 volatile uint8_t flag = 0;
 volatile uint8_t flag2 = 0;
 uint8_t state = 0;
 
 char uart_buffer[60];
-
-uint16_t C0r1AVG = 0;
-uint16_t C0r2AVG = 0;
-uint16_t C0r3AVG = 0;
-uint16_t C0r4AVG = 0;
-uint16_t C0r5AVG = 0;
 
 volatile uint8_t run_main_loop = 0; // 0 = stop, 1 = start
 volatile uint8_t run_offset = 0;
@@ -177,18 +171,14 @@ int main(void)
 		  HAL_GPIO_WritePin(COL12_GPIO_Port, COL12_Pin, 0);
 
 		  HAL_Delay(2);
-		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
 		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
 		  state = 2;
 		  break;
 
 	  case 2:
 		  if(flag == 1 && flag2 == 1){
-			  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-			  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-			  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-			  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+			  snprintf(uart_buffer, sizeof(uart_buffer), "COL0: %u, %u, %u, %u, %u\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2], adc_buffer2[0], adc_buffer2[1]);
 			  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
 
 			  flag = 0;
@@ -205,18 +195,14 @@ int main(void)
 		  HAL_GPIO_WritePin(COL1_GPIO_Port, COL1_Pin, 1);
 		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
 		  HAL_Delay(2);
-		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 15);
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, 3);
 		  HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_buffer2, 2);
 		  state = 4;
 		  break;
 
 	  case 4:
 		  if(flag == 1 && flag2 == 1){
-			  C0r1AVG = (adc_buffer[0] + adc_buffer[3] + adc_buffer[6] + adc_buffer[9] + adc_buffer[12])/5;
-			  C0r2AVG = (adc_buffer[1] + adc_buffer[4] + adc_buffer[7] + adc_buffer[10] + adc_buffer[13])/5;
-			  C0r3AVG = (adc_buffer[2] + adc_buffer[5] + adc_buffer[8] + adc_buffer[11] + adc_buffer[14])/5;
-
-			  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %u, %u, %u, %u, %u\r\n", C0r1AVG, C0r2AVG, C0r3AVG,adc_buffer2[0], adc_buffer2[1]);
+			  snprintf(uart_buffer, sizeof(uart_buffer), "COL1: %u, %u, %u, %u, %u\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2], adc_buffer2[0], adc_buffer2[1]);
 			  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
 
 			  flag = 0;
@@ -347,7 +333,11 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.OversamplingMode = DISABLE;
+  hadc1.Init.OversamplingMode = ENABLE;
+  hadc1.Init.Oversampling.Ratio = ADC_OVERSAMPLING_RATIO_16;
+  hadc1.Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_4;
+  hadc1.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
+  hadc1.Init.Oversampling.OversamplingStopReset = ADC_REGOVERSAMPLING_CONTINUED_MODE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -432,7 +422,11 @@ static void MX_ADC2_Init(void)
   hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc2.Init.DMAContinuousRequests = DISABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc2.Init.OversamplingMode = DISABLE;
+  hadc2.Init.OversamplingMode = ENABLE;
+  hadc2.Init.Oversampling.Ratio = ADC_OVERSAMPLING_RATIO_16;
+  hadc2.Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_4;
+  hadc2.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
+  hadc2.Init.Oversampling.OversamplingStopReset = ADC_REGOVERSAMPLING_CONTINUED_MODE;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
     Error_Handler();
