@@ -39,5 +39,13 @@ void StartColumn(GPIO_TypeDef* colPort, uint16_t colPin, GPIO_TypeDef* ledPort, 
     HAL_ADC_Start_DMA(hadc3, (uint32_t *)adcBuf3, 2);
 }
 
+void StartColumnOffset(GPIO_TypeDef* colPort, uint16_t colPin, GPIO_TypeDef* ledPort, uint16_t ledPin, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc2, ADC_HandleTypeDef* hadc3, uint16_t* adcBuf1, uint16_t* adcBuf2, uint16_t* adcBuf3) {
+    HAL_GPIO_WritePin(colPort, colPin, GPIO_PIN_RESET); // Turn on column
+    HAL_GPIO_WritePin(ledPort, ledPin, GPIO_PIN_SET); // Turn on LED
+    HAL_Delay(2);
 
+    HAL_ADC_Start_DMA(hadc1, (uint32_t *)adcBuf1, 5);
+    HAL_ADC_Start_DMA(hadc2, (uint32_t *)adcBuf2, 5);
+    HAL_ADC_Start_DMA(hadc3, (uint32_t *)adcBuf3, 2);
+}
 

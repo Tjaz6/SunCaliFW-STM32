@@ -36,6 +36,8 @@
 extern volatile uint8_t run_main_loop;
 extern volatile uint8_t run_offset;
 
+extern volatile uint8_t run_once;
+
 uint8_t nastavitve[7];
 
 
@@ -303,13 +305,18 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 			   CDC_Transmit_FS((uint8_t*)"Main loop started\r\n", 19);  // Optional response
 			   break;
 			}
+			if (strncmp((char*)Buf, "pulse", 5) == 0){
+						    run_once= 1;  // Set flag to start the loop
+						   CDC_Transmit_FS((uint8_t*)"Sending Pulse\r\n", 15);  // Optional response
+						   break;
+						}
 			CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);
 			break;
 
 		case 8:
 			if (strncmp((char*)Buf, "offset", 6) == 0){
 				run_offset = 1;  // Set the offset flag to start
-				CDC_Transmit_FS((uint8_t*)"Running offset measurement\r\n", 28);  // Optional response
+				CDC_Transmit_FS((uint8_t*)"Running offset \r\n", 17);  // Optional response
 				break;
 			}
 			CDC_Transmit_FS((uint8_t*)"Unknown Command\r\n", 17);

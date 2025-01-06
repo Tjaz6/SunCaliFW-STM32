@@ -75,6 +75,8 @@ char uart_buffer[93];
 volatile uint8_t run_main_loop = 0; // 0 = stop, 1 = start
 volatile uint8_t run_offset = 0;
 
+volatile uint8_t run_once = 0;
+
 
 const char* columnNames[] = {"COL0", "COL1", "COL2", "COL3", "COL4", "COL5", "COL6", "COL7", "COL8", "COL9", "COL10", "COL11"};
 GPIO_TypeDef* columnPorts[] = {COL0_GPIO_Port, COL1_GPIO_Port, COL2_GPIO_Port, COL3_GPIO_Port, COL4_GPIO_Port, COL5_GPIO_Port, COL6_GPIO_Port, COL7_GPIO_Port, COL8_GPIO_Port, COL9_GPIO_Port, COL10_GPIO_Port, COL11_GPIO_Port};
@@ -176,6 +178,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1) {
 
+	  if(run_once == 1){
+		  run_main_loop = 1;
+	  }
+
 	  switch (state){
 	  case 0:
 		  if (run_main_loop == 1){
@@ -214,21 +220,36 @@ int main(void)
 		    }
 
 
+			  if(run_once == 1){
+				  run_main_loop = 0;
+				  run_once = 0;
+			  }
+
+
 		  state = 0;
 		  break;
 
 
 	  case 50:
-		  if(flag == 1 && flag2 == 1){
 
-			  snprintf(uart_buffer, sizeof(uart_buffer), "Offsets: %u, %u, %u, %u, %u\r\n", adc_buffer[0], adc_buffer[1], adc_buffer[2], adc_buffer2[0], adc_buffer2[1]);
-			  CDC_Transmit_FS((uint8_t *)uart_buffer, strlen(uart_buffer));
+		  for (int i = 0; i < 12; ++i) {
+						// Start the column
+						StartColumnOffset(columnPorts[i], columnPins[i], LED2_GPIO_Port, LED2_Pin,
+									&hadc1, &hadc2, &hadc3, adc_buffer, adc_buffer2, adc_buffer3);
 
-			  flag = 0;
-			  flag2 = 0;
-			  state = 0;
-		  }
+						// Wait for ADC completion flags
+						while (!(flag && flag2 && flag3)) {
+							// Optional: Add a timeout or error handling if necessary
+						}
 
+						// Output data for the column
+						OutputColumnData(columnNames[i], adc_buffer, adc_buffer2, adc_buffer3,
+										 columnPorts[i], columnPins[i], LED2_GPIO_Port, LED2_Pin,
+										 &flag, &flag2, &flag3);
+					}
+
+		  run_offset = 0;
+		  state = 0;
 		  break;
 
 	  default:
@@ -236,7 +257,7 @@ int main(void)
 
 	  }
 
-	  HAL_Delay(10);
+	  HAL_Delay(50);
 
 
   }

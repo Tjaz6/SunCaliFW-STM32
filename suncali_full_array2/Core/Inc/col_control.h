@@ -24,4 +24,10 @@ void OutputColumnData(const char* columnName, uint16_t* adcBuf1, uint16_t* adcBu
 					  volatile uint8_t* flag1, volatile uint8_t* flag2, volatile uint8_t* flag3);
 
 
+
+void StartColumnOffset(GPIO_TypeDef* colPort, uint16_t colPin, GPIO_TypeDef* ledPort, uint16_t ledPin,
+        ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc2, ADC_HandleTypeDef* hadc3,
+        uint16_t* adcBuf1, uint16_t* adcBuf2, uint16_t* adcBuf3);
+
+
 #endif /* INC_COL_CONTROL_H_ */
