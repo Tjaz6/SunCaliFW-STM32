@@ -75,7 +75,7 @@ char uart_buffer[93];
 volatile uint8_t run_main_loop = 0; // 0 = stop, 1 = start
 volatile uint8_t run_offset = 0;
 
-volatile uint8_t run_once = 0; // pulse
+volatile uint8_t run_once = 0; // pulse pls
 
 
 const char* columnNames[] = {"COL0", "COL1", "COL2", "COL3", "COL4", "COL5", "COL6", "COL7", "COL8", "COL9", "COL10", "COL11"};
